@@ -1,5 +1,6 @@
-# from kivy.app import App
-# from kivy.uix.button import Button
+import os
+from kivy.app import App
+from kivy.uix.button import Button
 from keras.datasets import cifar10
 import tensorflow as tf
 import numpy as np
@@ -9,32 +10,51 @@ from keras.models import Sequential
 
 from tensorflow import keras
 
-# class MainApp(App):
-#     def build(self):
-#         button = Button(text='Hello from Kivy',
-#                         size_hint=(.5, .5),
-#                         pos_hint={'center_x': .5, 'center_y': .5})
-#         button.bind(on_press=self.on_press_button)
+class MainApp(App):
+    def build(self):
+        button = Button(text='Hello from Kivy',
+                        size_hint=(.5, .5),
+                        pos_hint={'center_x': .5, 'center_y': .5})
+        button.bind(on_press=self.on_press_button)
 
-#         return button
+        return button
 
-#     def on_press_button(self, instance):
+    def on_press_button(self, instance):
         
-#         print('You pressed the button!')
-        
-#         cnn=models.load_model("./models/models.h5")
-    
-#         weights = cnn.get_weights
-        
-        
-# if __name__ == '__main__':
-#     app = MainApp()
-#     app.run()
+        print('You pressed the button!')
+        # load models into a list of models from a directory
 
 
-cnn = models.load_model("./models/models.h5")
-weights = cnn.get_weights()
-np_weights = np.array(weights)
-np_weights_divided = np_weights/2
-print(np_weights[0][0][0]-np_weights_divided[0][0][0])
-cnn.load_weights(weights)
+        # model1= models.load_model("./models/models.h5")
+        # model2= models.load_model("./models/model2.h5")
+        
+        # new_models = [(w1+w2)/3 for (w1,w2) in zip(model1.get_weights(),model2.get_weights())]
+        # model1.set_weights(new_models)
+        # model1.save("./models/model3.h5")
+        k=os.listdir("./models")
+        print(k)
+        model_grp=[]
+        for i in k:
+            m=models.load_model("./models/"+i)
+            model_grp.append(m)
+
+        weights=[]
+        for i in model_grp:
+            weight = i.get_weights()
+            weights.append(weight)
+
+        l=len(weights)
+        new_weights= [sum(x) for x in zip(*weights)]
+        new_weights=[x/l for x in new_weights]
+        model_grp[0].set_weights(new_weights)
+        model_grp[0].save("./models/model3.h5")
+        print("successfull saved the model and saved the weights....")
+
+if __name__ == '__main__':
+    app = MainApp()
+    app.run()
+
+
+
+
+

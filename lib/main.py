@@ -45,7 +45,7 @@ class MainApp(App):
 
 
         cnn.save("./models/models.h5")
-        cnn.save_weights("./models/weights/weights")
+        # cnn.save_weights("./models/weights/weights.h5")
         print("successfull saved the model and saved the weights....")
 
 
