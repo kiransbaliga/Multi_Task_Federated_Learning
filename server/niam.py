@@ -31,11 +31,11 @@ class MainApp(App):
         # new_models = [(w1+w2)/3 for (w1,w2) in zip(model1.get_weights(),model2.get_weights())]
         # model1.set_weights(new_models)
         # model1.save("./models/model3.h5")
-        k=os.listdir("./models")
+        k=os.listdir("../lib/models")
         print(k)
         model_grp=[]
         for i in k:
-            m=models.load_model("./models/"+i)
+            m=models.load_model("../lib/models/"+i)
             model_grp.append(m)
 
         weights=[]
@@ -47,7 +47,7 @@ class MainApp(App):
         new_weights= [sum(x) for x in zip(*weights)]
         new_weights=[x/l for x in new_weights]
         model_grp[0].set_weights(new_weights)
-        model_grp[0].save("./models/global_model.h5")
+        model_grp[0].save("../lib/models/global_model.h5")
         print("Ceated the global model....")
 
 if __name__ == '__main__':
