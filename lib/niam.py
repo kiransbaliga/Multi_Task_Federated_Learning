@@ -12,7 +12,7 @@ from tensorflow import keras
 
 class MainApp(App):
     def build(self):
-        button = Button(text='Hello from Kivy',
+        button = Button(text='Click to create the global model',
                         size_hint=(.5, .5),
                         pos_hint={'center_x': .5, 'center_y': .5})
         button.bind(on_press=self.on_press_button)
@@ -47,8 +47,8 @@ class MainApp(App):
         new_weights= [sum(x) for x in zip(*weights)]
         new_weights=[x/l for x in new_weights]
         model_grp[0].set_weights(new_weights)
-        model_grp[0].save("./models/model3.h5")
-        print("successfull saved the model and saved the weights....")
+        model_grp[0].save("./models/global_model.h5")
+        print("Ceated the global model....")
 
 if __name__ == '__main__':
     app = MainApp()
