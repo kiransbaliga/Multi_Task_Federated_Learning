@@ -31,37 +31,6 @@ class main_layout(GridLayout):
         ))
 
         # self.add_widget(Image(source='./download.png',size_hint=(.25,.25),pos=(100,400)))
-    def train_model_cifar10(self, instance):
-        
-        print('You pressed the button!')
-        (X_train,y_train),(X_test,y_test)=cifar10.load_data()
-        y_train=y_train.reshape(-1,)
-        classes=["somethingelse","somethingelse","somethingelse","somethingelse","somethingelse","somethingelse","somethingelse","somethingelse","ship","truck"]
-        X_train=X_train/255
-        X_test=X_test/255
-
-        cnn =models.Sequential([
-                        layers.Conv2D( filters=32 , kernel_size=(3,3) , activation='relu' , input_shape=(32,32,3) ),
-                        layers.MaxPooling2D((2,2)),
-                        layers.Conv2D( filters=64 , kernel_size=(3,3) , activation='relu'  ),
-                        layers.MaxPooling2D((2,2)),
-                        layers.Flatten(),
-                        layers.Dense(64,activation='relu'),
-                        layers.Dense(10,activation='softmax'),
-        ])
-        cnn.compile( optimizer='adam' , loss='sparse_categorical_crossentropy' , metrics=['accuracy']       
-            )
-        cnn.fit(X_train,y_train, epochs=10)
-        cnn.evaluate(X_test,y_test)
-        # save the cnn model weights as numpy array
-        cnn.save("./models/models.h5")
-        # cnn.save_weights("./models/weights/weights.h5")
-        weights = cnn.get_weights()
-        with open('weights.pkl', 'wb') as f:
-            pickle.dump(weights, f)
-        
-        
-        print("successfull saved the model and saved the weights....")
         
     def download_global_model(self,instance):
         print("You pressed the button2")
@@ -129,6 +98,53 @@ class main_layout(GridLayout):
         # Save the model
         model.save('multitask_cifar10.h5')
 
+    def train_model_cifar10(self, instance):
+        def multi_task_cifar_10():
+            # Load the CIFAR-10 dataset
+            (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+            x_train = x_train / 255.0
+            # Preprocess the data
+            x_test = x_test / 255.0
+            y_train_categorical = tf.keras.utils.to_categorical(y_train, num_classes=10)
+            y_test_categorical = tf.keras.utils.to_categorical(y_test, num_classes=10)
+            # Define the binary ship vs not-ship label
+            ship_label = 8
+            y_train_ship = np.where(y_train == ship_label, 1, 0)
+            y_test_ship = np.where(y_test == ship_label, 1, 0)
+            # Define the model architecture
+            inputs = tf.keras.Input(shape=(32, 32, 3))
+            x = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+            x = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+            x = tf.keras.layers.Dropout(0.25)(x)
+            x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+            x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+            x = tf.keras.layers.Dropout(0.25)(x)
+            x = tf.keras.layers.Flatten()(x)
+            x = tf.keras.layers.Dense(512, activation='relu')(x)
+            x = tf.keras.layers.Dropout(0.5)(x)
+            # Output for the 10 original CIFAR-10 classes
+            task1_output = tf.keras.layers.Dense(10, activation='softmax', name='task1_output')(x)
+            # Output for the binary ship vs not-ship class
+            task2_output = tf.keras.layers.Dense(1, activation='sigmoid', name='task2_output')(x)
+            # Define the model and compile it
+            model = tf.keras.Model(inputs=inputs, outputs=[task1_output, task2_output])
+            model.compile(optimizer='adam',
+                          loss={'task1_output': 'categorical_crossentropy', 'task2_output': 'binary_crossentropy'},
+                          loss_weights={'task1_output': 1.0, 'task2_output': 1.0},
+                          metrics=['accuracy'])
+            # Train the model
+            model.fit(x_train, {'task1_output': y_train_categorical, 'task2_output': y_train_ship},
+                      validation_data=(x_test, {'task1_output': y_test_categorical, 'task2_output': y_test_ship}),
+                      epochs=10, batch_size=32)
+            # Save the model
+            model.save('multitask_cifar10.h5')
+            
+        multi_task_cifar_10()
+        
+        
+        print("successfull saved the model and saved the weights....")
 
 class MainApp(App):
     def build(self):
